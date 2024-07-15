@@ -1,0 +1,22 @@
+[project]
+name = "hgsp-lvm"
+version = "0.1.0"
+description = "Hilbert space Gaussian process latent variable model exploration in numpyro"
+authors = [
+    {name = "Brendan Cooley", email = "brendan.cooley@gmail.com"},
+]
+dependencies = [
+    "numpyro>=0.15.1,~=0.15",
+]
+requires-python = "~=3.11"
+readme = "README.md"
+license = {text = "MIT"}
+
+
+[tool.pdm]
+distribution = false
+
+[tool.pdm.dev-dependencies]
+lint = [
+    "ruff>=0.5.2",
+]
