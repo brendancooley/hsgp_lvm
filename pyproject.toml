@@ -7,16 +7,17 @@ authors = [
 ]
 dependencies = [
     "numpyro>=0.15.1,~=0.15",
+    "optax~=0.2",
+    "typed-argument-parser~=1.10",
 ]
 requires-python = "~=3.11"
 readme = "README.md"
 license = {text = "MIT"}
 
-
-[tool.pdm]
-distribution = false
-
 [tool.pdm.dev-dependencies]
 lint = [
     "ruff>=0.5.2",
 ]
+
+[tool.ruff.lint]
+select = ["I"]

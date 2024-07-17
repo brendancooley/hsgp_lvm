@@ -1,13 +1,12 @@
 import jax
 import jax.numpy as jnp
-
 import numpyro
+import numpyro.distributions as dist
+from numpyro import handlers
 from numpyro.contrib.hsgp.approximation import eigenfunctions
 from numpyro.contrib.hsgp.spectral_densities import (
     diag_spectral_density_squared_exponential,
 )
-import numpyro.distributions as dist
-from numpyro import handlers
 
 
 def hsgp(latent_dim: int, out_dim: int, ell: float, m: int, prefix: str):
@@ -45,6 +44,7 @@ class HSGPLVM:
         m: int,
         num_class: int,
         reconstruction_w: float = 0.25,
+        **kwargs,
     ):
         self.latent_dim = latent_dim
         self.ell = ell
