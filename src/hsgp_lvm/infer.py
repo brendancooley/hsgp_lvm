@@ -1,5 +1,7 @@
 from jax import random
+from numpyro.infer.autoguide import AutoNormal
 from numpyro.infer.elbo import Trace_ELBO
+from numpyro.infer.initialization import init_to_median
 from numpyro.infer.svi import SVI
 from numpyro.optim import Adam
 from optax import linear_onecycle_schedule

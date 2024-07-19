@@ -6,6 +6,7 @@ authors = [
     {name = "Brendan Cooley", email = "brendan.cooley@gmail.com"},
 ]
 dependencies = [
+    "modal~=0.63",
     "numpyro>=0.15.1,~=0.15",
     "optax~=0.2",
     "typed-argument-parser~=1.10",

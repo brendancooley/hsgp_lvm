@@ -16,7 +16,7 @@ class PPCA:
 
     def model(
         self,
-        X: jnp.Array,
+        X: jax.Array,
         y: jax.Array,
         mask: jax.Array,
         subsample_size: int | None = None,
