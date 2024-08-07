@@ -9,6 +9,8 @@ dependencies = [
     "modal~=0.63",
     "numpyro>=0.15.1,~=0.15",
     "optax~=0.2",
+    "python-dotenv~=1.0",
+    "s3fs~=2024.1",
     "typed-argument-parser~=1.10",
 ]
 requires-python = "~=3.11"

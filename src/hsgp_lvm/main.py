@@ -2,11 +2,13 @@ import logging
 from typing import Literal
 
 import modal
+from dotenv import load_dotenv
 from numpyro.infer.autoguide import AutoNormal
 from numpyro.infer.initialization import init_to_median
 
 from hsgp_lvm.data.mnist import load_data
 from hsgp_lvm.infer import fit_svi
+from hsgp_lvm.io import save_svi_result
 from hsgp_lvm.model.hsgp_lvm import HSGPLVM
 from hsgp_lvm.model.ppca import PPCA
 
@@ -32,6 +34,7 @@ def main(
     m: int = 10,
     num_steps: int = 10,
 ):
+    load_dotenv(override=True)
     logging.basicConfig(level=logging.INFO)
     model_cls = HSGPLVM if model_name == "hsgp_lvm" else PPCA
     logging.info(f"Insantiating {model_cls.__name__} model.")
@@ -51,5 +54,7 @@ def main(
         # init_params=None if init_params is None else init_params.params,
         subsample_size=1_000,
     )
+    logging.info("Saving SVI result.")
+    save_svi_result(svi_res, model_name)
+    # TODO save structured hyparams
     print("done")
-    # TODO handle save/load
