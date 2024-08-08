@@ -1,0 +1,7 @@
+{
+    "latent_dim": 2,
+    "num_class": 10,
+    "reconstruction_w": 0.25,
+    "ell": 5,
+    "m": 10
+}

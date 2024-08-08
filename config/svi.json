@@ -1,0 +1,5 @@
+{
+    "num_steps": 10,
+    "use_scheduler": false,
+    "lr": 0.01
+}

@@ -8,9 +8,16 @@ from numpyro.contrib.hsgp.spectral_densities import (
     diag_spectral_density_squared_exponential,
 )
 
+from hsgp_lvm.model.config import ModelConfig
 
-def hsgp(latent_dim: int, out_dim: int, ell: float, m: int, prefix: str):
-    beta_shape = (m**latent_dim, out_dim)
+
+class HSGPLVMConfig(ModelConfig):
+    ell: int
+    m: int
+
+
+def hsgp(config: HSGPLVMConfig, out_dim: int, prefix: str):
+    beta_shape = (config.m**config.latent_dim, out_dim)
     with handlers.scope(prefix=prefix, divider="_"):
         alpha_mean = numpyro.sample("alpha_mean", dist.Normal(0, 1))
         alpha_std = numpyro.sample("alpha_std", dist.LogNormal(0, 1))
@@ -23,12 +30,16 @@ def hsgp(latent_dim: int, out_dim: int, ell: float, m: int, prefix: str):
         length = numpyro.sample(
             "length",
             dist.LogNormal(length_mean, length_std),
-            sample_shape=(out_dim, latent_dim),
+            sample_shape=(out_dim, config.latent_dim),
         )
 
         spd = jnp.sqrt(
             diag_spectral_density_squared_exponential(
-                alpha=alpha, length=length, ell=ell, m=m, dim=latent_dim
+                alpha=alpha,
+                length=length,
+                ell=config.ell,
+                m=config.m,
+                dim=config.latent_dim,
             )
         )
         beta = numpyro.sample("beta", dist.Normal(0, 1), sample_shape=beta_shape)
@@ -39,18 +50,10 @@ def hsgp(latent_dim: int, out_dim: int, ell: float, m: int, prefix: str):
 class HSGPLVM:
     def __init__(
         self,
-        latent_dim: int,
-        ell: float,
-        m: int,
-        num_class: int,
-        reconstruction_w: float = 0.25,
+        config: HSGPLVMConfig,
         **kwargs,
     ):
-        self.latent_dim = latent_dim
-        self.ell = ell
-        self.m = m
-        self.num_class = num_class
-        self.reconstruction_w = reconstruction_w
+        self.config = config
 
     def model(
         self,
@@ -61,22 +64,22 @@ class HSGPLVM:
     ):
         img_out_dim = X.shape[1]
 
-        hsgp_img = hsgp(self.latent_dim, img_out_dim, self.ell, self.m, prefix="img")
-        hsgp_cls = hsgp(self.latent_dim, self.num_class, self.ell, self.m, prefix="cls")
+        hsgp_img = hsgp(self.config, img_out_dim, prefix="img")
+        hsgp_cls = hsgp(self.config, self.config.num_class, prefix="cls")
         with numpyro.plate("data", X.shape[0], subsample_size=subsample_size) as ind:
             X_batch = X[ind]
             y_batch = y[ind]
             mask_batch = mask[ind]
             Z = numpyro.sample(
-                "Z", dist.Normal(0, 1).expand([self.latent_dim]).to_event(1)
+                "Z", dist.Normal(0, 1).expand([self.config.latent_dim]).to_event(1)
             )
-            eig_f = eigenfunctions(x=Z, ell=self.ell, m=self.m)
+            eig_f = eigenfunctions(x=Z, ell=self.config.ell, m=self.config.m)
 
             # reconstruct images
             f_img = eig_f @ hsgp_img
             p_img = numpyro.deterministic("p_img", jax.scipy.special.expit(f_img))
             with handlers.scale(
-                scale=self.reconstruction_w  # TODO how to set this in a principled way?
+                scale=self.config.reconstruction_w  # TODO how to set this in a principled way?
             ):
                 numpyro.sample(
                     "obs", dist.BernoulliProbs(p_img).to_event(1), obs=X_batch
@@ -90,7 +93,7 @@ class HSGPLVM:
 
     def tree_flatten(self):
         children = ()  # arrays / dynamic values
-        aux_data = (self.latent_dim, self.ell, self.m)  # static values
+        aux_data = (self.config,)  # static values
         return (children, aux_data)
 
     @classmethod
