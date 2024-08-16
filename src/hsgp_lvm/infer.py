@@ -8,12 +8,13 @@ from optax import linear_onecycle_schedule
 from pydantic import BaseModel, model_validator
 
 
-class SVIConfig(BaseModel):
+class InferConfig(BaseModel):
     num_steps: int = 50_000
     use_scheduler: bool = True
     peak_lr: float | None = 0.01
     lr: float | None = 0.01
     progress_bar: bool = True
+    subsample_size: int | None = None
 
     @model_validator(mode="after")
     def validate_lr(self):
@@ -27,17 +28,19 @@ def fit_svi(
     seed: int,
     model: callable,
     guide: callable,
-    svi_config: SVIConfig,
+    infer_config: InferConfig,
     **model_kwargs,
 ):
-    if svi_config.use_scheduler:
-        lr = linear_onecycle_schedule(svi_config.num_steps, svi_config.peak_lr)
+    if infer_config.use_scheduler:
+        lr = linear_onecycle_schedule(infer_config.num_steps, infer_config.peak_lr)
     else:
-        lr = svi_config.lr
+        lr = infer_config.lr
     svi = SVI(model, guide, Adam(lr), Trace_ELBO())
     return svi.run(
         random.PRNGKey(seed),
-        svi_config.num_steps,
-        progress_bar=svi_config.progress_bar,
+        infer_config.num_steps,
+        progress_bar=infer_config.progress_bar,
+        subsample_size=infer_config.subsample_size,
+        stable_update=True,
         **model_kwargs,
     )
