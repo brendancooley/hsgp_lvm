@@ -2,7 +2,7 @@ from jax import random
 from numpyro.infer.autoguide import AutoNormal
 from numpyro.infer.elbo import Trace_ELBO
 from numpyro.infer.initialization import init_to_median
-from numpyro.infer.svi import SVI
+from numpyro.infer.svi import SVI, SVIRunResult
 from numpyro.optim import Adam
 from optax import linear_onecycle_schedule
 from pydantic import BaseModel, model_validator
@@ -30,7 +30,7 @@ def fit_svi(
     guide: callable,
     infer_config: InferConfig,
     **model_kwargs,
-):
+) -> SVIRunResult:
     if infer_config.use_scheduler:
         lr = linear_onecycle_schedule(infer_config.num_steps, infer_config.peak_lr)
     else:

@@ -5,7 +5,8 @@ from typing import Callable, Literal
 import jax
 import modal
 from dotenv import load_dotenv
-from numpyro.infer.autoguide import AutoNormal
+from numpyro.infer.svi import SVIRunResult
+from numpyro.infer.autoguide import AutoNormal, AutoGuide
 from numpyro.infer.initialization import init_to_median
 from pydantic import BaseModel
 
@@ -25,10 +26,10 @@ image = modal.Image.debian_slim(python_version="3.12").pip_install_from_requirem
 
 @app.function(image=image)
 def fit(
-    seed: int, model: Callable[..., None], infer_config: InferConfig, **model_kwargs
-):
-    guide = AutoNormal(model, init_loc_fn=init_to_median(num_samples=50))
-    return fit_svi(
+    seed: int, model: Callable[..., None], guide_cls: type[AutoGuide], infer_config: InferConfig, **model_kwargs
+) -> SVIRunResult:
+    guide = guide_cls(model, init_loc_fn=init_to_median(num_samples=50))
+    return guide, fit_svi(
         seed=seed, model=model, guide=guide, infer_config=infer_config, **model_kwargs
     )
 
@@ -40,6 +41,7 @@ def main(
     test_batch_size: int = 10_000,
     model_config_path: str | None = None,
     infer_config_path: str | None = None,
+    guide_cls: AutoGuide = AutoNormal,
     local: bool = False,
 ):
     load_dotenv(override=True)
@@ -64,14 +66,15 @@ def main(
     fit_kwargs = {
         "seed": 0,
         "model": model.model,
+        "guide_cls": guide_cls,
         "infer_config": infer_config,
         "X": X,
         "y": y,
         "mask": mask,
     }
-    svi_res = fit.local(**fit_kwargs) if local else fit.remote(**fit_kwargs)
+    guide, svi_res = fit.local(**fit_kwargs) if local else fit.remote(**fit_kwargs)
     logging.info("Saving SVI result.")
-    result = ModelResult(model_name, svi_res, model_config, infer_config)
+    result = ModelResult(model_name, guide_cls, svi_res, model_config, infer_config)
     result.save()
     print("done")
     # TODO metrics

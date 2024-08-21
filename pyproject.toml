@@ -19,6 +19,7 @@ license = {text = "MIT"}
 
 [project.optional-dependencies]
 nb = [
+    "altair~=5.0",
     "marimo~=0.7",
 ]
 

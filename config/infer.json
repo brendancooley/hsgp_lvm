@@ -1,6 +1,6 @@
 {
-    "num_steps": 50000,
+    "num_steps": 10,
     "use_scheduler": true,
     "peak_lr": 0.01,
-    "subsample_size": 1000
+    "subsample_size": 5000
 }

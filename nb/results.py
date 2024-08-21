@@ -24,18 +24,23 @@ def __(HSGP_LVM, MODEL_NAME, get_args, mo):
         options=list(get_args(MODEL_NAME)), label="Select Model:", value=HSGP_LVM
     )
     model_name
-    return (model_name,)
+    return model_name,
 
 
 @app.cell
 def __(ModelResult, model_name):
     result = ModelResult.load(model_name.value)
-    return (result,)
+    return result,
 
 
 @app.cell
 def __(result):
-    result
+    posterior = result.posterior()
+    return posterior,
+
+
+@app.cell
+def __():
     return
 
 
